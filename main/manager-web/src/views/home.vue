@@ -5,7 +5,7 @@
     <el-main style="padding: 20px;display: flex;flex-direction: column;">
       <div>
         <!-- 首页内容 -->
-        <div class="add-device">
+        <div v-if="isSuperAdmin" class="add-device">
           <div class="add-device-bg">
             <div class="hellow-text" style="margin-top: 30px;">
               你好，小智
@@ -64,10 +64,14 @@ import ChatHistoryDialog from '@/components/ChatHistoryDialog.vue';
 import DeviceItem from '@/components/DeviceItem.vue';
 import HeaderBar from '@/components/HeaderBar.vue';
 import VersionFooter from '@/components/VersionFooter.vue';
+import { mapState } from 'vuex';
 
 export default {
   name: 'HomePage',
   components: { DeviceItem, AddWisdomBodyDialog, HeaderBar, VersionFooter, ChatHistoryDialog },
+  computed: {
+    ...mapState(['isSuperAdmin'])
+  },
   data() {
     return {
       addDeviceDialogVisible: false,
