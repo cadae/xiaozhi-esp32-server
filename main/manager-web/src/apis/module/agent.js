@@ -18,6 +18,20 @@ export default {
                 });
             }).send();
     },
+    getAgentAll(callback) {
+        RequestService.sendRequest()
+            .url(`${getServiceUrl()}/agent/all`)
+            .method('GET')
+            .success((res) => {
+                RequestService.clearRequestTime();
+                callback(res);
+            })
+            .networkFail(() => {
+                RequestService.reAjaxFun(() => {
+                    this.getAgentAll(callback);
+                });
+            }).send();
+    },
     // 添加智能体
     addAgent(agentName, callback) {
         RequestService.sendRequest()

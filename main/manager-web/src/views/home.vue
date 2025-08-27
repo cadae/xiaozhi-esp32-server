@@ -133,26 +133,57 @@ export default {
     // 获取智能体列表
     fetchAgentList() {
       this.isLoading = true;
-      Api.agent.getAgentList(({ data }) => {
+      const handleSuccess = ({ data }) => {
+        let agentList = [];
         if (data?.data) {
-          this.originalDevices = data.data.map(item => ({
+          if (Array.isArray(data.data)) {
+            agentList = data.data;
+          } else if (data.data.records && Array.isArray(data.data.records)) {
+            agentList = data.data.records;
+          } else if (data.data.list && Array.isArray(data.data.list)) {
+            agentList = data.data.list;
+          } else {
+            console.error('Agent list data is not in expected format:', data.data);
+          }
+        }
+
+        if (this.isSuperAdmin) {
+          // For super admins, map the fields from /all response to match /list response
+          this.originalDevices = agentList.map(item => ({
+            ...item,
+            agentId: item.id,
+            ttsModelName: item.ttsModelId,
+            ttsVoiceName: item.ttsVoiceId,
+            llmModelName: item.llmModelId,
+            vllmModelName: item.vllmModelId
+          }));
+        } else {
+          this.originalDevices = agentList.map(item => ({
             ...item,
             agentId: item.id
           }));
-
-          // 动态设置骨架屏数量（可选）
-          this.skeletonCount = Math.min(
-            Math.max(this.originalDevices.length, 3), // 最少3个
-            10 // 最多10个
-          );
-
-          this.handleSearchReset();
         }
+
+        // 动态设置骨架屏数量（可选）
+        this.skeletonCount = Math.min(
+          Math.max(this.originalDevices.length, 3), // 最少3个
+          10 // 最多10个
+        );
+
+        this.handleSearchReset();
         this.isLoading = false;
-      }, (error) => {
+      };
+
+      const handleError = (error) => {
         console.error('Failed to fetch agent list:', error);
         this.isLoading = false;
-      });
+      };
+
+      if (this.isSuperAdmin) {
+        Api.agent.getAgentAll(handleSuccess, handleError);
+      } else {
+        Api.agent.getAgentList(handleSuccess, handleError);
+      }
     },
     // 删除智能体
     handleDeleteAgent(agentId) {

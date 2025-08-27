@@ -8,9 +8,9 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    token: '',
+    token: localStorage.getItem('token') || '',
     userInfo: {}, // 添加用户信息存储
-    isSuperAdmin: false, // 添加superAdmin状态
+    isSuperAdmin: localStorage.getItem('isSuperAdmin') === 'true', // 添加superAdmin状态
     pubConfig: { // 添加公共配置存储
       version: '',
       beianIcpNum: 'null',
