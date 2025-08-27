@@ -4,7 +4,7 @@
       <div style="font-weight: 700;font-size: 18px;text-align: left;color: #3d4566;">
         {{ device.agentName }}
       </div>
-      <div>
+      <div v-if="isSuperAdmin">
         <img src="@/assets/home/delete.png" alt="" style="width: 18px;height: 18px;margin-right: 10px;"
           @click.stop="handleDelete" />
         <el-tooltip class="item" effect="dark" :content="device.systemPrompt" placement="top"
@@ -20,10 +20,10 @@
       音色模型：{{ device.ttsModelName }} ({{ device.ttsVoiceName }})
     </div>
     <div style="display: flex;gap: 10px;align-items: center;">
-      <div class="settings-btn" @click="handleConfigure">
+      <div v-if="isSuperAdmin" class="settings-btn" @click="handleConfigure">
         配置角色
       </div>
-       <div class="settings-btn" @click="handleVoicePrint">
+       <div v-if="isSuperAdmin" class="settings-btn" @click="handleVoicePrint">
         声纹识别
       </div>
       <div class="settings-btn" @click="handleDeviceManage">
@@ -44,6 +44,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+
 export default {
   name: 'DeviceItem',
   props: {
@@ -71,6 +73,11 @@ export default {
       } else {
         return this.device.lastConnectedAt;
       }
+    },
+    ...mapGetters(['getIsSuperAdmin']),
+    isSuperAdmin() {
+      // 通过 getter 读取，确保能从 localStorage 回退，避免刷新前后的不一致
+      return this.getIsSuperAdmin;
     }
   },
   methods: {
