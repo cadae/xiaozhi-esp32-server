@@ -195,9 +195,24 @@ export default {
       }
 
       this.form.captchaId = this.captchaUuid
-      Api.user.login(this.form, ({ data }) => {
+      Api.user.login(this.form, async ({ data }) => {
         showSuccess('登录成功！');
+        // 先保存token
         this.$store.commit('setToken', JSON.stringify(data.data));
+        // 登录后立刻获取用户信息，确保 isSuperAdmin 在进入首页前就已就绪，避免首次进入只加载个人Agent
+        try {
+          await new Promise((resolve) => {
+            Api.user.getUserInfo(({ data: userRes }) => {
+              if (userRes && (userRes.code === 0 || userRes.code === undefined) && userRes.data) {
+                this.$store.commit('setUserInfo', userRes.data);
+              }
+              resolve();
+            });
+          });
+        } catch (e) {
+          // 即使获取失败也不阻塞跳转
+          console.warn('获取用户信息失败，继续跳转首页', e);
+        }
         goToPage('/home');
       }, (err) => {
         showDanger(err.data.msg || '登录失败')
