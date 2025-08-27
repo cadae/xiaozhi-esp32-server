@@ -64,13 +64,17 @@ import ChatHistoryDialog from '@/components/ChatHistoryDialog.vue';
 import DeviceItem from '@/components/DeviceItem.vue';
 import HeaderBar from '@/components/HeaderBar.vue';
 import VersionFooter from '@/components/VersionFooter.vue';
-import { mapState } from 'vuex';
+import { mapGetters } from 'vuex';
 
 export default {
   name: 'HomePage',
   components: { DeviceItem, AddWisdomBodyDialog, HeaderBar, VersionFooter, ChatHistoryDialog },
   computed: {
-    ...mapState(['isSuperAdmin'])
+    ...mapGetters(['getIsSuperAdmin']),
+    isSuperAdmin() {
+      // 通过 getter 读取，确保能从 localStorage 回退，避免刷新前后的不一致
+      return this.getIsSuperAdmin;
+    }
   },
   data() {
     return {
@@ -89,6 +93,15 @@ export default {
 
   mounted() {
     this.fetchAgentList();
+  },
+
+  watch: {
+    // 当 isSuperAdmin 在登录后异步更新时，自动重新拉取列表
+    isSuperAdmin(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.fetchAgentList();
+      }
+    }
   },
 
   methods: {
