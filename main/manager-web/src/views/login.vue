@@ -209,7 +209,7 @@ export default {
     fetchCaptcha() {
       if (this.$store.getters.getToken) {
         if (this.$route.path !== "/home") {
-          this.$router.push("/home");
+          goToPage("/home");
         }
       } else {
         this.captchaUuid = getUUID();
@@ -285,60 +285,49 @@ export default {
         return;
       }
 
-<<<<<<< HEAD
-      this.form.captchaId = this.captchaUuid
+      this.form.captchaId = this.captchaUuid;
       Api.user.login(this.form, async ({ data }) => {
-        showSuccess('登录成功！');
+        showSuccess("登录成功！");
         // 先保存token
-        this.$store.commit('setToken', JSON.stringify(data.data));
+        this.$store.commit("setToken", JSON.stringify(data.data));
         // 登录后立刻获取用户信息，确保 isSuperAdmin 在进入首页前就已就绪，避免首次进入只加载个人Agent
         try {
           await new Promise((resolve) => {
             Api.user.getUserInfo(({ data: userRes }) => {
               if (userRes && (userRes.code === 0 || userRes.code === undefined) && userRes.data) {
-                this.$store.commit('setUserInfo', userRes.data);
+                this.$store.commit("setUserInfo", userRes.data);
               }
               resolve();
             });
           });
         } catch (e) {
-                this.form.captchaId = this.captchaUuid;
-                Api.user.login(
-                  this.form,
-                  async ({ data }) => {
-                    showSuccess("登录成功！");
-                    // 保存 token
-                    this.$store.commit("setToken", JSON.stringify(data.data));
-                    // 登录后立即获取用户信息，确保权限/角色等状态就绪
-                      try {
-                        await new Promise((resolve) => {
-                          Api.user.getUserInfo(({ data: userRes }) => {
-                            if (
-                              userRes &&
-                              (userRes.code === 0 || userRes.code === undefined) &&
-                              userRes.data
-                            ) {
-                              this.$store.commit("setUserInfo", userRes.data);
-                            }
-                            resolve();
-                          });
-                        });
-                      } catch (e) {
-                        console.warn("获取用户信息失败，继续跳转首页", e);
-                      }
-                    goToPage("/home");
-                  },
-                  (err) => {
-                    showDanger(err.data.msg || "登录失败");
-                    if (
-                      err.data != null &&
-                      err.data.msg != null &&
-                      err.data.msg.indexOf("图形验证码") > -1
-                    ) {
-                      this.fetchCaptcha();
-                    }
-                  }
-                );
+          console.warn("获取用户信息失败，继续跳转首页", e);
+        }
+        goToPage("/home");
+      },
+        (err) => {
+          showDanger(err.data.msg || "登录失败");
+          if (
+            err.data != null &&
+            err.data.msg != null &&
+            err.data.msg.indexOf("图形验证码") > -1
+          ) {
+            this.fetchCaptcha();
+          }
+        }
+      );
+    },
+    goToRegister() {
+      goToPage("/register");
+    },
+    goToForgetPassword() {
+      goToPage("/forget-password");
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
 @import "./auth.scss";
 
 .login-type-container {

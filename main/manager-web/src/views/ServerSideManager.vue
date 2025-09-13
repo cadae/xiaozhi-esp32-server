@@ -69,10 +69,9 @@ export default {
     };
   },
   created() {
-    this.fetchParams();
+    this.getServerList();
   },
   mounted() {
-    this.getServerList();
     this.dialogTitle = this.$t('paramManagement.addParam');
   },
 
@@ -116,9 +115,9 @@ export default {
     handlePageSizeChange(val) {
       this.pageSize = val;
       this.currentPage = 1;
-      this.fetchParams();
+      this.getServerList();
     },
-    fetchParams() {
+    getServerList() {
       this.loading = true;
       Api.admin.getWsServerList(
         {},
