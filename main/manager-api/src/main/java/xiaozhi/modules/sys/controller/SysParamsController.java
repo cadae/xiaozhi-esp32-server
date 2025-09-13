@@ -107,8 +107,11 @@ public class SysParamsController {
         // 验证MCP地址
         validateMcpUrl(dto.getParamCode(), dto.getParamValue());
 
-        //
+        // 验证声纹地址
         validateVoicePrint(dto.getParamCode(), dto.getParamValue());
+
+        // 校验mqtt密钥长度
+        validateMqttSecretLength(dto.getParamCode(), dto.getParamValue());
 
         sysParamsService.update(dto);
         configService.getConfig(false);
@@ -231,6 +234,7 @@ public class SysParamsController {
             throw new RenException("MCP接口验证失败：" + e.getMessage());
         }
     }
+
     // 验证声纹接口地址是否正常
     private void validateVoicePrint(String paramCode, String url) {
         if (!paramCode.equals(Constant.SERVER_VOICE_PRINT)) {
@@ -262,6 +266,23 @@ public class SysParamsController {
             }
         } catch (Exception e) {
             throw new RenException("声纹接口验证失败：" + e.getMessage());
+        }
+    }
+
+    // 校验mqtt密钥长度和复杂度
+    private void validateMqttSecretLength(String paramCode, String secret) {
+        if (!paramCode.equals(Constant.SERVER_MQTT_SECRET)) {
+            return;
+        }
+        if (StringUtils.isBlank(secret) || secret.equals("null")) {
+            throw new RenException("mqtt密钥不能为空");
+        }
+        if (secret.length() < 8) {
+            throw new RenException("您的mqtt密钥长度不安全，字符数需要至少8个字符且必须同时包含大小写字母");
+        }
+        // 检查是否同时包含大小写字母
+        if (!secret.matches(".*[a-z].*") || !secret.matches(".*[A-Z].*")) {
+            throw new RenException("您的mqtt密钥长度不安全，mqtt密钥必须同时包含大小写字母");
         }
     }
 }
