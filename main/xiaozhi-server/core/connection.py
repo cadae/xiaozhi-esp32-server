@@ -976,11 +976,19 @@ class ConnectionHandler:
                 if item is None:  # 检测毒丸对象
                     break
                 try:
-                    # 检查线程池状态
+                    # 直接同步处理，避免与LLM/函数调用共享线程池导致阻塞
+                    start_ts = time.time()
                     if self.executor is None:
-                        continue
-                    # 提交任务到线程池
-                    self.executor.submit(self._process_report, *item)
+                        # 如果主线程池已经关闭，仍尝试直接处理
+                        self._process_report(*item)
+                    else:
+                        # 不再使用线程池，防止report挤占有限worker
+                        self._process_report(*item)
+                    cost = (time.time() - start_ts) * 1000
+                    if cost > 500:  # 超过500ms做一次调试日志
+                        self.logger.bind(tag=TAG).debug(
+                            f"上报处理耗时较长: {cost:.1f}ms"
+                        )
                 except Exception as e:
                     self.logger.bind(tag=TAG).error(f"聊天记录上报线程异常: {e}")
             except queue.Empty:
