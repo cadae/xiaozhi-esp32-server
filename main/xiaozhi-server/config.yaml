@@ -70,6 +70,11 @@ enable_stop_tts_notify: false
 # 说完话是否开启提示音，音效地址
 stop_tts_notify_voice: "config/assets/tts_notify.mp3"
 
+# Weather / context language customization
+# weather_lang controls the language used when fetching weather info inserted into the system prompt context.
+# Common values: zh_CN (default), en, zh_TW, ja, ko (depending on weather provider support)
+weather_lang: en
+
 exit_commands:
   - "退出"
   - "关闭"
