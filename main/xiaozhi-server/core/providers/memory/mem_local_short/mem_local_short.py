@@ -9,81 +9,84 @@ from core.utils.util import check_model_key
 
 
 short_term_memory_prompt = """
-# 时空记忆编织者
+# Temporal Memory Weaver
 
-## 核心使命
-构建可生长的动态记忆网络，在有限空间内保留关键信息的同时，智能维护信息演变轨迹
-根据对话记录，总结user的重要信息，以便在未来的对话中提供更个性化的服务
+## Core Mission
+Maintain an evolving compact memory graph. Preserve only user-relevant, actionable, identity / preference / long‑term contextual information from the dialogue while tracking changes over time.
 
-## 记忆法则
-### 1. 三维度记忆评估（每次更新必执行）
-| 维度       | 评估标准                  | 权重分 |
-|------------|---------------------------|--------|
-| 时效性     | 信息新鲜度（按对话轮次） | 40%    |
-| 情感强度   | 含💖标记/重复提及次数     | 35%    |
-| 关联密度   | 与其他信息的连接数量      | 25%    |
+## Memory Principles
+### 1. Three-Dimension Scoring (apply every update)
+| Dimension        | Criterion (Guideline)                     | Weight |
+|------------------|-------------------------------------------|--------|
+| Recency          | Freshness (recent dialogue turns)         | 40%    |
+| Emotional Intensity | Strong affect / repeated emphasis (💖) | 35%    |
+| Connectivity     | Links to other retained facts             | 25%    |
 
-### 2. 动态更新机制
-**名字变更处理示例：**
-原始记忆："曾用名": ["张三"], "现用名": "张三丰"
-触发条件：当检测到「我叫X」「称呼我Y」等命名信号时
-操作流程：
-1. 将旧名移入"曾用名"列表
-2. 记录命名时间轴："2024-02-15 14:32:启用张三丰"
-3. 在记忆立方追加：「从张三到张三丰的身份蜕变」
+### 2. Dynamic Update Examples
+Name change handling example:
+Original: "曾用名": ["张三"], "现用名": "张三丰"
+When detecting patterns like "My name is X" / "Call me Y":
+1. Move old name into list "曾用名" (former names)
+2. Append a timeline marker: "2024-02-15 14:32: 启用张三丰"
+3. Add an evolution note into memory cube describing the identity shift.
 
-### 3. 空间优化策略
-- **信息压缩术**：用符号体系提升密度
-  - ✅"张三丰[北/软工/🐱]"
-  - ❌"北京软件工程师，养猫"
-- **淘汰预警**：当总字数≥900时触发
-  1. 删除权重分<60且3轮未提及的信息
-  2. 合并相似条目（保留时间戳最近的）
+### 3. Space Optimization
+- Compression: Use compact symbolic annotations (e.g. ✅ "Alex[NY/Backend/🐱]" ❌ "Alex lives in New York, is a backend engineer and owns a cat")
+- Pruning Trigger: If total characters ≥ 900:
+    1. Remove entries with weighted score < 60 and not referenced in last 3 turns.
+    2. Merge near-duplicate items (keep the most recent timestamp).
 
-## 记忆结构
-输出格式必须为可解析的json字符串，不需要解释、注释和说明，保存记忆时仅从对话提取信息，不要混入示例内容
+## Output Structure
+Return ONLY a valid JSON string (no explanations, no markdown code fences unless strictly needed). Extract info ONLY from the conversation; do NOT include fictitious examples. Keep field names EXACTLY as shown (Chinese keys retained for backward compatibility) but generate all textual content (values) in English.
 ```json
 {
-  "时空档案": {
-    "身份图谱": {
-      "现用名": "",
-      "特征标记": [] 
+    "时空档案": {
+        "身份图谱": {
+            "现用名": "",
+            "特征标记": []
+        },
+        "记忆立方": [
+            {
+                "事件": "Joined a new company",
+                "时间戳": "2024-03-20",
+                "情感值": 0.9,
+                "关联项": ["afternoon tea"],
+                "保鲜期": 30
+            }
+        ]
     },
-    "记忆立方": [
-      {
-        "事件": "入职新公司",
-        "时间戳": "2024-03-20",
-        "情感值": 0.9,
-        "关联项": ["下午茶"],
-        "保鲜期": 30 
-      }
+    "关系网络": {
+        "高频话题": {"career": 12},
+        "暗线联系": [""]
+    },
+    "待响应": {
+        "紧急事项": ["Immediate tasks"],
+        "潜在关怀": ["Potential proactive support"]
+    },
+    "高光语录": [
+        "A directly quoted emotionally strong user moment"
     ]
-  },
-  "关系网络": {
-    "高频话题": {"职场": 12},
-    "暗线联系": [""]
-  },
-  "待响应": {
-    "紧急事项": ["需立即处理的任务"], 
-    "潜在关怀": ["可主动提供的帮助"]
-  },
-  "高光语录": [
-    "最打动人心的瞬间，强烈的情感表达，user的原话"
-  ]
 }
 ```
+
+### Additional Constraints
+1. Use English for all content values.
+2. Do NOT fabricate facts; only include what is grounded in dialogue.
+3. Keep emotional / preference / identity / plans / concerns; ignore device control, weather, trivial filler, or ephemeral system status.
+4. If no meaningful new information appears, you may return the previous memory unchanged.
+5. Total JSON (string length) should remain concise (target < 1800 Chinese characters equivalent; optimize but do not lose key facts).
 """
 
 short_term_memory_prompt_only_content = """
-你是一个经验丰富的记忆总结者，擅长将对话内容进行总结摘要，遵循以下规则：
-1、总结user的重要信息，以便在未来的对话中提供更个性化的服务
-2、不要重复总结，不要遗忘之前记忆，除非原来的记忆超过了1800字内，否则不要遗忘、不要压缩用户的历史记忆
-3、用户操控的设备音量、播放音乐、天气、退出、不想对话等和用户本身无关的内容，这些信息不需要加入到总结中
-4、聊天内容中的今天的日期时间、今天的天气情况与用户事件无关的数据，这些信息如果当成记忆存储会影响后序对话，这些信息不需要加入到总结中
-5、不要把设备操控的成果结果和失败结果加入到总结中，也不要把用户的一些废话加入到总结中
-6、不要为了总结而总结，如果用户的聊天没有意义，请返回原来的历史记录也是可以的
-7、只需要返回总结摘要，严格控制在1800字内
-8、不要包含代码、xml，不需要解释、注释和说明，保存记忆时仅从对话提取信息，不要混入示例内容
+You are an experienced dialogue memory summarizer. Produce an updated SHORT memory (English only) following these rules:
+1. Extract only stable user-centric facts: identity, preferences, routines, goals, concerns, emotional signals.
+2. Do NOT repeat or discard prior memory unless the accumulated memory would exceed about 1800 characters; preserve earlier facts unless clearly obsolete.
+3. Exclude: device volume changes, media playback commands, weather reports, exit/stop phrases, refusal to chat, transient control interactions.
+4. Exclude ephemeral data like today's timestamp or current weather unless the user ties them to a personal plan or event.
+5. Exclude execution success/failure of device actions and meaningless filler phrases.
+6. If the latest conversation adds nothing meaningful, simply return the previous historical memory unchanged.
+7. Output ONLY the updated memory text (no JSON required in this mode), within ~1800 characters.
+8. No code, XML, or commentary—pure factual English summary.
 """
 
 
@@ -165,12 +168,12 @@ class MemoryProvider(MemoryProviderBase):
             elif msg.role == "assistant":
                 msgStr += f"Assistant: {msg.content}\n"
         if self.short_memory and len(self.short_memory) > 0:
-            msgStr += "历史记忆：\n"
+            msgStr += "History Memory:\n"
             msgStr += self.short_memory
 
         # 当前时间
         time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        msgStr += f"当前时间：{time_str}"
+    msgStr += f"Current Time: {time_str}"
 
         if self.save_to_file:
             result = self.llm.response_no_stream(
